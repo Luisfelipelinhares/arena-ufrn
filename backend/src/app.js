@@ -21,9 +21,12 @@ import { createDisponibilidadeRoutes } from './routes/disponibilidade.routes.js'
 export function createApp(prisma, { agora } = {}) {
     const app = express();
 
-    const allowedOrigins = [
-        'http://localhost:5173',
-    ];
+    // Permite configurar os endereços autorizados por variável de ambiente.
+    const allowedOrigins = (
+        process.env.CORS_ORIGIN || 'http://localhost:5173'
+    )
+        .split(',')
+        .map((origin) => origin.trim());
 
     app.use(cors({
         origin: allowedOrigins,
@@ -31,12 +34,22 @@ export function createApp(prisma, { agora } = {}) {
 
     app.use(express.json());
 
+    // Rota inicial
     app.get('/', (req, res) => {
         res.json({
             message: 'Arena UFRN API funcionando!',
         });
     });
 
+    // Verificação de saúde da API
+    app.get('/health', (req, res) => {
+        res.status(200).json({
+            status: 'ok',
+            message: 'Arena UFRN API funcionando!',
+        });
+    });
+
+    // Rota de teste
     app.get('/api/test', (req, res) => {
         res.json({
             message: 'Comunicação com Backend realizada com Sucesso!',
