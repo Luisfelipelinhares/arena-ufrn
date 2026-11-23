@@ -1,6 +1,9 @@
+
 name: Backend CI
 
 on:
+  workflow_dispatch:
+
   push:
     branches:
       - main
@@ -12,7 +15,6 @@ on:
 jobs:
   test-and-sonar:
     name: Testes e análise SonarQube
-
     runs-on: ubuntu-latest
 
     steps:
@@ -60,7 +62,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
- 
+
   smoke-test:
     name: Smoke Test - API em produção
     runs-on: ubuntu-latest
