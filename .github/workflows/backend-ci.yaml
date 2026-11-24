@@ -67,20 +67,33 @@ jobs:
     name: Smoke Test - API em produção
     runs-on: ubuntu-latest
     needs: test-and-sonar
+    timeout-minutes: 10
     if: >-
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
 
     steps:
-      - name: Diagnosticar conexão com Render
+      - name: Verificar saúde da API
         env:
           RENDER_URL: ${{ secrets.RENDER_URL }}
         run: |
-          echo "Testando DNS..."
-          getent hosts arena-ufrn-2.onrender.com || true
+          echo "Aguardando a API ficar saudável..."
 
-          echo "Testando conexão HTTPS..."
-          curl -v --connect-timeout 10 --max-time 30 \
-            "${RENDER_URL}/health" || true
+          for tentativa in $(seq 1 12); do
+            echo "Tentativa $tentativa de 12"
 
-          echo "Diagnóstico concluído."
+            if curl --fail --silent --show-error \
+              --connect-timeout 10 \
+              --max-time 20 \
+              "${RENDER_URL}/health"; then
+              echo ""
+              echo "Smoke Test aprovado!"
+              exit 0
+            fi
+
+            echo "API indisponível. Nova tentativa em 15 segundos..."
+            sleep 15
+          done
+
+          echo "A API não respondeu após 12 tentativas."
+          exit 1
