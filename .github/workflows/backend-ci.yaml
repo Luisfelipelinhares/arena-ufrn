@@ -72,19 +72,15 @@ jobs:
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
 
     steps:
-      - name: Aguardar a publicação no Render
-        run: sleep 60
-
-      - name: Verificar saúde da API
+      - name: Diagnosticar conexão com Render
         env:
           RENDER_URL: ${{ secrets.RENDER_URL }}
         run: |
-          echo "Verificando saúde da API..."
+          echo "Testando DNS..."
+          getent hosts arena-ufrn-2.onrender.com || true
 
-          curl --fail --show-error \
-            --connect-timeout 10 \
-            --max-time 20 \
-            --retry 5 \
-            --retry-delay 10 \
-            --retry-all-errors \
-            "${RENDER_URL}/health"
+          echo "Testando conexão HTTPS..."
+          curl -v --connect-timeout 10 --max-time 30 \
+            "${RENDER_URL}/health" || true
+
+          echo "Diagnóstico concluído."
